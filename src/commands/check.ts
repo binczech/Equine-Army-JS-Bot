@@ -1,5 +1,8 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { CommandInteraction } from 'discord.js';
+import { isUndefined } from 'lodash/fp';
+import { getUser } from '../firebase';
+import { hasUserAdminPermission } from '../utils/has-user-permission';
 
 export const data = new SlashCommandBuilder()
 	.setName('kontrola')
@@ -12,6 +15,15 @@ export const data = new SlashCommandBuilder()
 	);
 
 export async function execute(interaction: CommandInteraction) {
+	if (!hasUserAdminPermission(interaction)) return interaction.reply('Nemáš oprávnění na tento příkaz.');
+
 	const user = interaction.options.getUser('hráč')!;
-	return interaction.reply(`Hráč ${user} má 1324 peněz.`);
+
+	const userData = await getUser(user);
+
+	if (isUndefined(userData)) {
+		return interaction.reply('Výpis peněz se nepovedl.');
+	}
+
+	return interaction.reply(`Hráč ${user} má ${userData.money} peněz.`);
 }

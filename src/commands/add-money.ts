@@ -1,5 +1,8 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { CommandInteraction } from 'discord.js';
+import { isUndefined } from 'lodash/fp';
+import { changeUserMoney } from '../firebase';
+import { hasUserAdminPermission } from '../utils/has-user-permission';
 
 export const data = new SlashCommandBuilder()
 	.setName('pripsat')
@@ -15,12 +18,19 @@ export const data = new SlashCommandBuilder()
 			.setName('částka')
 			.setDescription('Částka, která se hráčovi připíše')
 			.setRequired(true)
-			.setMinValue(0)
-			.setMaxValue(5000),
+			.setMinValue(0),
 	);
 
 export async function execute(interaction: CommandInteraction) {
-	const amount = interaction.options.getInteger('částka')!;
+	if (!hasUserAdminPermission(interaction)) return interaction.reply('Nemáš oprávnění na tento příkaz.');
+
+	const money = interaction.options.getInteger('částka')!;
 	const user = interaction.options.getUser('hráč')!;
-	return interaction.reply(`Hráči ${user} bylo připsáno ${amount} peněz.`);
+
+	const newMoney = await changeUserMoney(user, money);
+	if (isUndefined(newMoney)) {
+		return interaction.reply('Připsání peněz se nepovedlo.');
+	}
+
+	return interaction.reply(`Hráči ${user} bylo připsáno ${money} peněz. Nyní má ${newMoney} peněz.`);
 }
