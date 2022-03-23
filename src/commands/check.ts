@@ -15,15 +15,20 @@ export const data = new SlashCommandBuilder()
 	);
 
 export async function execute(interaction: CommandInteraction) {
+	// Checks if user has permission for this command
 	if (!hasUserAdminPermission(interaction)) return interaction.reply('Nemáš oprávnění na tento příkaz.');
 
+	// Gets arguments from the command
 	const user = interaction.options.getUser('hráč')!;
 
+	// Gets the user from the database
 	const userData = await getUser(user);
 
+	// Checks if data was found
 	if (isUndefined(userData)) {
 		return interaction.reply('Výpis peněz se nepovedl.');
 	}
 
+	// Sends a message to the channel
 	return interaction.reply(`Hráč ${user} má ${userData.money} peněz.`);
 }

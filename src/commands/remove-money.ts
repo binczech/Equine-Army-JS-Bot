@@ -22,15 +22,20 @@ export const data = new SlashCommandBuilder()
 	);
 
 export async function execute(interaction: CommandInteraction) {
+	// Checks if user has permission for this command
 	if (!hasUserAdminPermission(interaction)) return interaction.reply('Nemáš oprávnění na tento příkaz.');
 
+	// Gets arguments from the command
 	const money = interaction.options.getInteger('částka')!;
 	const user = interaction.options.getUser('hráč')!;
 
+	// Removes money from the user
 	const newMoney = await changeUserMoney(user, -money);
+	// Checks if the money was removed
 	if (isUndefined(newMoney)) {
 		return interaction.reply('Odebrání peněz se nepovedlo.');
 	}
 
+	// Sends a message to the channel
 	return interaction.reply(`Hráči ${user} bylo odebráno ${money} peněz. Nyní má ${newMoney} peněz.`);
 }

@@ -8,8 +8,10 @@ export const data = new SlashCommandBuilder()
 	.setDescription('Vypíše seznam příkazů.');
 
 export async function execute(interaction: CommandInteraction) {
+	// Gets author of the message
 	const { user } = interaction;
 
+	// Builds the help
 	const userCommands = createEmbed({ user, title: 'Uživatelské příkazy' })
 		.addFields(
 			{ name: '/prikazy', value: 'Vypíše seznam příkazů.' },
@@ -25,5 +27,6 @@ export async function execute(interaction: CommandInteraction) {
 			{ name: '/reset @hráč', value: 'Resetuje peníze hráče na startovní hodnotu peněz.' },
 		);
 
+	// Sends a message to the channel
 	return interaction.reply({ embeds: [userCommands, adminCommands] });
 }

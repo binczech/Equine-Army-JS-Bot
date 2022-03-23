@@ -21,11 +21,17 @@ export const data = new SlashCommandBuilder()
 	);
 
 export async function execute(interaction: CommandInteraction, client: Client) {
+	// Gets arguments from the command
 	const amount = interaction.options.getInteger('částka')!;
 	const role = interaction.options.getRole('role')!;
+
+	// Gets all users with the role
 	const members = client.guilds.cache.get(config.GUILD_ID)?.members.fetch();
 	const membersWithRole = (await members)?.filter(member => member.roles.cache.has(role.id));
+
+	// Adds money to all users with the role
 	membersWithRole?.forEach(member => changeUserMoney(member.user, amount));
 
+	// Sends a message to the channel
 	return interaction.reply(`Uživatelům s rolí ${role} bylo připsáno ${amount} peněz.`);
 }
