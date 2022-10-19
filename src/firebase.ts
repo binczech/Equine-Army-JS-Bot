@@ -1,6 +1,6 @@
 import { User } from 'discord.js';
 import { initializeApp } from 'firebase/app';
-import { collection, CollectionReference, doc, DocumentData, getDoc, getFirestore, setDoc } from 'firebase/firestore/lite';
+import { collection, CollectionReference, deleteDoc, doc, DocumentData, getDoc, getDocs, getFirestore, setDoc } from 'firebase/firestore/lite';
 import { isUndefined } from 'lodash/fp';
 
 const firebaseConfig = {
@@ -24,6 +24,15 @@ interface StartingMoney {
     money: number;
 }
 
+interface Reward {
+    emojiId: number;
+    money: number;
+}
+
+interface RewardWithId extends Reward {
+    id: string;
+}
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -34,6 +43,7 @@ const createCollection = <T = DocumentData>(collectionName: string) => {
 const usersCol = createCollection<UserData>('users');
 const startingMoneyCol = createCollection<StartingMoney>('startingMoney');
 const startingMoneyDocId = 'startingMoney';
+const rewardsCol = createCollection<Reward>('rewards');
 
 export async function setStartingMoney(money: number) {
 	try {
@@ -154,5 +164,67 @@ export async function resetUserMoney(user: User): Promise<number | undefined> {
 	}
 	catch (error) {
 		console.error('Error resetting user money: ', error);
+	}
+}
+
+export async function getRewards(): Promise<Array<RewardWithId> | undefined> {
+	try {
+		return await (await getDocs(rewardsCol)).docs
+			.map((x): RewardWithId => ({ emojiId: x.data().emojiId, money: x.data().money, id: x.id }));
+	}
+	catch (error) {
+		console.error('Error getting rewards: ', error);
+	}
+}
+
+export async function getReward(emojiId: number): Promise<RewardWithId | undefined> {
+	try {
+		const rewards = await getRewards();
+
+		return rewards?.find(x => x.emojiId === emojiId);
+	}
+	catch (error) {
+		console.error('Error getting reward: ', error);
+	}
+}
+
+export async function setReward(reward: Reward): Promise<RewardWithId | undefined> {
+	try {
+		const rewards = await getRewards();
+
+		const storedReward = (rewards || []).find(x => x.emojiId === reward.emojiId);
+
+		if (storedReward) {
+			await setDoc(doc(rewardsCol, storedReward.id), reward);
+		}
+		else {
+			await setDoc(doc(rewardsCol), reward);
+		}
+
+		return await getReward(reward.emojiId);
+	}
+	catch (error) {
+		console.error('Error setting reward: ', error);
+	}
+}
+
+export async function deleteReward(rewardId?: string, emojiId?: number): Promise<boolean | undefined> {
+	try {
+		if (rewardId) {
+			await deleteDoc(doc(rewardsCol, rewardId));
+
+			return (await getRewards())?.map(x => x.id).includes(rewardId);
+		}
+		else if (emojiId) {
+			const reward = await getReward(emojiId);
+			if (reward) {
+				await deleteDoc(doc(rewardsCol, reward.id));
+			}
+
+			return (await getRewards())?.map(x => x.emojiId).includes(emojiId);
+		}
+	}
+	catch (error) {
+		console.error('Error deleting reward: ', error);
 	}
 }

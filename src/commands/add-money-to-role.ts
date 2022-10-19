@@ -2,6 +2,7 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import { Client, CommandInteraction } from 'discord.js';
 import config from '../config';
 import { changeUserMoney } from '../firebase';
+import { hasUserAdminPermission } from '../utils/has-user-permission';
 
 export const data = new SlashCommandBuilder()
 	.setName('pripsatroli')
@@ -21,6 +22,9 @@ export const data = new SlashCommandBuilder()
 	);
 
 export async function execute(interaction: CommandInteraction, client: Client) {
+	// Checks if user has permission for this command
+	if (!hasUserAdminPermission(interaction)) return interaction.reply('Nemáš oprávnění na tento příkaz.');
+
 	// Gets arguments from the command
 	const amount = interaction.options.getInteger('částka')!;
 	const role = interaction.options.getRole('role')!;

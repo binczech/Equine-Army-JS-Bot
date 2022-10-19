@@ -1,4 +1,5 @@
 import { Collection, GuildEmoji, ReactionEmoji, Role } from 'discord.js';
+import { parseEmoji } from './parse-emoji';
 
 export const getTriggeredRole = (
 	messageContent: string,
@@ -13,13 +14,19 @@ export const getTriggeredRole = (
 	// Loops through rows
 	rows.forEach(row => {
 		// Splits row into array by space
-		const [emote, rawRoleId] = row.split(' ');
+		const [rawEmoji, rawRoleId] = row.split(' ');
 
 		// Gets role id from raw role id
 		const roleId = rawRoleId.replace(/\D/g, '');
 
+		// Gets emoji from raw emoji
+		const parsedEmoji = parseEmoji(rawEmoji);
+
 		// Returns role if emote in row is equal to the emoji from reaction and role exists
-		if (emote === emoji.name && roles.map(x => x.id).includes(roleId)) {
+		if (
+			(parsedEmoji?.id === emoji.id || parsedEmoji?.name === emoji.name)
+			&& roles.map(x => x.id).includes(roleId)
+		) {
 			triggeredRole = roles.find(x => x.id === roleId);
 		}
 	});

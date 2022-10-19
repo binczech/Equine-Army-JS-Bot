@@ -7,3 +7,5 @@ export * as odebrat from './remove-money';
 export * as reset from './reset-user';
 export * as prikazy from './commands';
 export * as pripsatroli from './add-money-to-role';
+export * as nastavitodmenu from './set-reward';
+export * as zobrazitodmeny from './show-rewards';
